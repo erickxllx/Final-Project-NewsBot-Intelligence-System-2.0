@@ -1,6 +1,7 @@
 from src.conversation.intent_classifier import IntentClassifier
 from src.conversation.query_processor import QueryProcessor
 
+
 class ChatBot:
     def __init__(self):
         self.ic = IntentClassifier()

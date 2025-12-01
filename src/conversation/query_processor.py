@@ -1,48 +1,95 @@
+# =========================================
+# QueryProcessor – FIXED FOR YOUR PROJECT
+# =========================================
+
+# Data preprocessing
+from src.data_processing.text_preprocessor import TextPreprocessor
+
+# Analysis modules
 from src.analysis.classifier import NewsClassifier
-from src.analysis.ner_extractor import NERExtractor
 from src.analysis.sentiment_analyzer import SentimentAnalyzer
+from src.analysis.ner_extractor import NERExtractor
 from src.analysis.topic_modeler import TopicModeler
 
+# Language model tools
 from src.language_models.summarizer import Summarizer
-from src.language_models.embeddings import EmbeddingModel
-from src.language_models.generator import TextGenerator
+from src.language_models.embeddings import EmbeddingModel   
+#from src.language_models.generator import TextGenerator
 
+# Multilingual modules
 from src.multilingual.translator import Translator
 from src.multilingual.language_detector import LanguageDetector
 from src.multilingual.cross_lingual_analyzer import CrossLingualAnalyzer
 
+
 class QueryProcessor:
+
     def __init__(self):
-        self.summarizer = Summarizer()
+
+        # Preprocessing
+        self.pre = TextPreprocessor()
+
+        # Analysis modules
+        self.classifier = NewsClassifier()
         self.sentiment = SentimentAnalyzer()
         self.ner = NERExtractor()
-        self.classifier = NewsClassifier()
-        self.topics = TopicModeler()
+        self.topic_modeler = TopicModeler()
+
+        # Language models
+        self.summarizer = Summarizer()
         self.embed = EmbeddingModel()
-        self.generator = TextGenerator()
+        #self.generator = TextGenerator()
+
+        # Multilingual
         self.translator = Translator()
-        self.lang_detect = LanguageDetector()
+        self.lang_detector = LanguageDetector()
         self.cross = CrossLingualAnalyzer()
 
     def process(self, query, context):
         intent = context.get("intent", "")
 
+        # =============================================
+        # SUMMARIZATION
+        # =============================================
         if intent == "summarize":
-            return self.summarizer.summarize(context["text"])
+            text = context["text"]
+            return self.summarizer.summarize(text)
 
+        # =============================================
+        # SENTIMENT
+        # =============================================
         if intent == "sentiment":
-            return self.sentiment.analyze(context["text"])
+            text = context["text"]
+            return self.sentiment.analyze(text)
 
+        # =============================================
+        # NER
+        # =============================================
         if intent == "ner":
-            return self.ner.extract(context["text"])
+            text = context["text"]
+            return self.ner.extract(text)
 
+        # =============================================
+        # TRANSLATION
+        # =============================================
         if intent == "translate":
-            return self.translator.translate(context["text"], "en")
+            text = context["text"]
+            return self.translator.translate(text, src_lang="auto", tgt_lang="en")
 
+        # =============================================
+        # SEMANTIC SIMILARITY
+        # =============================================
         if intent == "similarity":
-            return self.embed.similarity(context["text"], context["reference"])
+            text1 = context["text"]
+            text2 = context["reference"]
+            return self.embed.similarity(text1, text2)
 
+        # =============================================
+        # CLASSIFICATION
+        # =============================================
         if intent == "classify":
-            return self.classifier.predict(context["text"])
+            text = context["text"]
+            return self.classifier.predict(text)
 
-        return {"reply": "I did not understand the request."}
+        # Default fallback
+        return {"response": "I'm not sure what you want."}
