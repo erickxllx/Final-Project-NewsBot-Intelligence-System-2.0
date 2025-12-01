@@ -44,7 +44,8 @@ if mode == "Chat":
     user_input = st.text_input("Enter your message:")
     if st.button("Send"):
         if user_input.strip():
-            response = bot.ask(user_input)
+            # FIXED: always provide context
+            response = bot.ask(user_input, {})
             st.write("### 🤖 Response:")
             st.write(response)
 
