@@ -59,8 +59,20 @@ class QueryProcessor:
         # ======================
         # Translation
         # ======================
-        if "translate" in query or "traducir" in query:
-            return self.translator.translate_to_english(context.get("text", ""))
+        query_lower = query.lower()
+
+                # ======================
+                # Translation
+                # ======================
+        if "translate" in query_lower or "traducir" in query_lower:
+                text = context.get("text", "")
+                lang = self.translator.detect_language(text)
+
+                if lang == "es":
+                    return self.translator.translate_to_english(text)
+                else:
+                    return self.translator.translate_to_spanish(text)
+
 
         # ======================
         # Similarity
