@@ -1,33 +1,23 @@
-# =========================================
-# QueryProcessor – FIXED FOR YOUR PROJECT
-# =========================================
-
-# Data preprocessing
 from src.data_processing.text_preprocessor import TextPreprocessor
 
 # Analysis modules
 from src.analysis.classifier import NewsClassifier
+from src.analysis.topic_modeler import TopicModeler
 from src.analysis.sentiment_analyzer import SentimentAnalyzer
 from src.analysis.ner_extractor import NERExtractor
-from src.analysis.topic_modeler import TopicModeler
 
-# Language model tools
+# Language models
 from src.language_models.summarizer import Summarizer
-#from src.language_models.embeddings import EmbeddingModel   
 from src.language_models.generator import TextGenerator
 
-# Multilingual modules
+# Multilingual
 from src.multilingual.translator import Translator
-from src.multilingual.language_detector import LanguageDetector
-from src.multilingual.cross_lingual_analyzer import CrossLingualAnalyzer
 
 
 class QueryProcessor:
-
     def __init__(self):
-
         # Preprocessing
-        self.preprocessor  = TextPreprocessor()
+        self.pre = TextPreprocessor()
 
         # Analysis modules
         self.classifier = NewsClassifier()
@@ -37,59 +27,57 @@ class QueryProcessor:
 
         # Language models
         self.summarizer = Summarizer()
-        self.embed = EmbeddingModel()
-        #self.generator = TextGenerator()
+        self.generator = TextGenerator()
 
         # Multilingual
         self.translator = Translator()
-        self.lang_detector = LanguageDetector()
-        self.cross = CrossLingualAnalyzer()
 
-    def process(self, query, context):
-        intent = context.get("intent", "")
+    def process(self, query, context=None):
+        if context is None:
+            context = {}
 
-        # =============================================
-        # SUMMARIZATION
-        # =============================================
-        if intent == "summarize":
-            text = context["text"]
-            return self.summarizer.summarize(text)
+        query = query.lower().strip()
 
-        # =============================================
-        # SENTIMENT
-        # =============================================
-        if intent == "sentiment":
-            text = context["text"]
-            return self.sentiment.analyze(text)
+        # ======================
+        # Summarization
+        # ======================
+        if "summary" in query or "summarize" in query or "resumen" in query:
+            return self.summarizer.summarize(context.get("text", ""))
 
-        # =============================================
+        # ======================
+        # Sentiment
+        # ======================
+        if "sentiment" in query or "feeling" in query or "opinion" in query:
+            return self.sentiment.analyze(context.get("text", ""))
+
+        # ======================
         # NER
-        # =============================================
-        if intent == "ner":
-            text = context["text"]
-            return self.ner.extract(text)
+        # ======================
+        if "entities" in query or "ner" in query:
+            return self.ner.extract(context.get("text", ""))
 
-        # =============================================
-        # TRANSLATION
-        # =============================================
-        if intent == "translate":
-            text = context["text"]
-            return self.translator.translate(text, src_lang="auto", tgt_lang="en")
+        # ======================
+        # Translation
+        # ======================
+        if "translate" in query or "traducir" in query:
+            return self.translator.translate_to_english(context.get("text", ""))
 
-        # =============================================
-        # SEMANTIC SIMILARITY
-        # =============================================
-        if intent == "similarity":
-            text1 = context["text"]
-            text2 = context["reference"]
-            return self.embed.similarity(text1, text2)
+        # ======================
+        # Similarity
+        # ======================
+        if "similar" in query or "similarity" in query or "compare" in query:
+            return self.generator.compare_similarity(
+                context.get("text", ""),
+                context.get("reference", "")
+            )
 
-        # =============================================
-        # CLASSIFICATION
-        # =============================================
-        if intent == "classify":
-            text = context["text"]
-            return self.classifier.predict(text)
+        # ======================
+        # Classification
+        # ======================
+        if "classify" in query or "topic" in query or "category" in query:
+            return self.classifier.predict(context.get("text", ""))
 
-        # Default fallback
-        return {"response": "I'm not sure what you want."}
+        # ======================
+        # Default chat
+        # ======================
+        return self.generator.generate_response(query)
