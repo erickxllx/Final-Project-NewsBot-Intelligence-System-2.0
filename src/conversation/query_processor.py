@@ -1,72 +1,48 @@
-from typing import Dict, Any
-
-# Text processing
-from src.data_processing.text_preprocessor import TextPreprocessor
-
-# Analysis modules
 from src.analysis.classifier import NewsClassifier
-from src.analysis.topic_modeler import TopicModeler
+from src.analysis.ner_extractor import NERExtractor
 from src.analysis.sentiment_analyzer import SentimentAnalyzer
-from src.analysis.ner_extractor import EntityExtractor
+from src.analysis.topic_modeler import TopicModeler
 
-# Multilingual modules
+from src.language_models.summarizer import Summarizer
+from src.language_models.embeddings import EmbeddingModel
+from src.language_models.generator import TextGenerator
+
 from src.multilingual.translator import Translator
 from src.multilingual.language_detector import LanguageDetector
 from src.multilingual.cross_lingual_analyzer import CrossLingualAnalyzer
 
-# Language models
-from src.language_models.embeddings import EmbeddingModel
-from src.language_models.generator import TextGenerator
-
-
 class QueryProcessor:
     def __init__(self):
-        self.pre = TextPreprocessor()
-
-        # Analysis components
-        self.classifier = NewsClassifier()
-        self.topic_modeler = TopicModeler()
+        self.summarizer = Summarizer()
         self.sentiment = SentimentAnalyzer()
-        self.ner = EntityExtractor()
-
-        # Multilingual components
+        self.ner = NERExtractor()
+        self.classifier = NewsClassifier()
+        self.topics = TopicModeler()
+        self.embed = EmbeddingModel()
+        self.generator = TextGenerator()
         self.translator = Translator()
-        self.lang_detector = LanguageDetector()
+        self.lang_detect = LanguageDetector()
         self.cross = CrossLingualAnalyzer()
 
-        # Models
-        self.embedder = EmbeddingModel()
-        self.generator = TextGenerator()
+    def process(self, query, context):
+        intent = context.get("intent", "")
 
-    def process(self, query: str, context: Dict[str, Any]):
-        intent = context.get("intent")
-        text = context.get("text", "")
-
-        # --- INTENT ROUTING ---
         if intent == "summarize":
-            return self.generator.generate_summary(text)
+            return self.summarizer.summarize(context["text"])
 
-        elif intent == "sentiment":
-            return self.sentiment.analyze(text)
+        if intent == "sentiment":
+            return self.sentiment.analyze(context["text"])
 
-        elif intent == "ner":
-            return self.ner.extract(text)
+        if intent == "ner":
+            return self.ner.extract(context["text"])
 
-        elif intent == "translate":
-            lang = self.lang_detector.detect(text)
-            translation = self.translator.auto_translate(text)
-            return {
-                "detected_language": lang,
-                "translation": translation
-            }
+        if intent == "translate":
+            return self.translator.translate(context["text"], "en")
 
-        elif intent == "similarity":
-            ref = context.get("reference", "")
-            score = self.embedder.similarity(text, ref)
-            return {"similarity": score}
+        if intent == "similarity":
+            return self.embed.similarity(context["text"], context["reference"])
 
-        elif intent == "classify":
-            return self.classifier.predict([text])[0]
+        if intent == "classify":
+            return self.classifier.predict(context["text"])
 
-        # DEFAULT → CHAT MODE (LLM)
-        return self.generator.chat(query)
+        return {"reply": "I did not understand the request."}
