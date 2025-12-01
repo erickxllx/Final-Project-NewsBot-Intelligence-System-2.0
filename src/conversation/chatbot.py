@@ -5,19 +5,21 @@ from src.conversation.response_generator import ResponseGenerator
 
 
 class ChatBot:
-    """
-    High-level chatbot interface for NewsBot.
-    Handles:
-      - intent detection
-      - task execution
-      - response formatting
-    """
-
     def __init__(self):
-        self.qp = QueryProcessor()
-        self.rg = ResponseGenerator()
+        from src.conversation.intent_classifier import IntentClassifier
+        from src.conversation.query_processor import QueryProcessor
 
-    def ask(self, query: str, context: Dict[str, Any] | None = None) -> str:
-        result = self.qp.process(query, context=context)
-        response = self.rg.generate(result)
-        return response
+        self.ic = IntentClassifier()
+        self.qp = QueryProcessor()
+
+    def ask(self, query, context=None):
+        if context is None:
+            context = {}
+
+        intent = self.ic.predict_intent(query)
+
+        # FIX: call without keyword argument
+        result = self.qp.process(query, context)
+
+        return result
+
