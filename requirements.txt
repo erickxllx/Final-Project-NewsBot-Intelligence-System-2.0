@@ -12,3 +12,4 @@ gensim
 pyLDAvis
 flask
 tabulate
+streamlit
