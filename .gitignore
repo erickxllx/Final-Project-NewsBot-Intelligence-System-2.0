@@ -1,0 +1,16 @@
+# Entorno virtual
+venv/
+
+# Archivos de Python
+__pycache__/
+*.pyc
+
+# Variables de entorno
+.env
+
+# Archivos grandes o temporales
+*.log
+*.tmp
+
+# Jupyter
+.ipynb_checkpoints/
