@@ -1,53 +1,51 @@
 from typing import List, Dict, Any
-import spacy
+from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import pipeline
 
 
 class NERExtractor:
     """
-    Named Entity Recognition using spaCy.
-    Extracts key entities like PERSON, ORG, GPE, MONEY, DATE, etc.
+    Named Entity Recognition using a lightweight Transformer model.
+    Works in Streamlit Cloud (does NOT require SpaCy).
+    Supports English and Spanish.
     """
 
     def __init__(self, language: str = "en"):
         self.language = language
-        self._load_spacy_model()
+        
+        # Multilingual NER model (works for EN + ES)
+        self.model_name = "Davlan/xlm-roberta-base-ner-hrl"
 
-    def _load_spacy_model(self):
         try:
-            if self.language == "en":
-                self.nlp = spacy.load("en_core_web_sm")
-            elif self.language == "es":
-                self.nlp = spacy.load("es_core_news_sm")
-            else:
-                raise ValueError(f"Unsupported language: {self.language}")
-        except OSError:
-            raise OSError(
-                f"Please install the SpaCy model:\n"
-                f"python -m spacy download {self.language}_core_web_sm"
+            self.nlp = pipeline(
+                "ner",
+                model=AutoModelForTokenClassification.from_pretrained(self.model_name),
+                tokenizer=AutoTokenizer.from_pretrained(self.model_name),
+                aggregation_strategy="max"
             )
+        except Exception as e:
+            print("Error loading NER model:", e)
+            raise e
 
     def extract(self, text: str) -> List[Dict[str, Any]]:
         """
-        Extract named entities from text.
-
-        Returns a list of:
-        {
-            "text": "Apple",
-            "label": "ORG",
-            "description": "Companies, agencies, institutions, etc."
-        }
+        Extract entities using a multilingual NER model.
         """
-        doc = self.nlp(text)
-        entities = []
 
-        for ent in doc.ents:
+        if not text or not isinstance(text, str):
+            return []
+
+        results = self.nlp(text)
+
+        entities = []
+        for ent in results:
             entities.append(
                 {
-                    "text": ent.text,
-                    "label": ent.label_,
-                    "description": spacy.explain(ent.label_) or "",
-                    "start_char": ent.start_char,
-                    "end_char": ent.end_char,
+                    "text": ent["word"],
+                    "label": ent["entity_group"],
+                    "score": round(float(ent["score"]), 4),
+                    "start": ent.get("start", None),
+                    "end": ent.get("end", None)
                 }
             )
 

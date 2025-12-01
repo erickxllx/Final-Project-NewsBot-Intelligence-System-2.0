@@ -27,7 +27,7 @@ class QueryProcessor:
     def __init__(self):
 
         # Preprocessing
-        self.pre = TextPreprocessor()
+        self.preprocessor  = TextPreprocessor()
 
         # Analysis modules
         self.classifier = NewsClassifier()
