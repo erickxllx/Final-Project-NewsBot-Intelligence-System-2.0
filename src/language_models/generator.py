@@ -1,67 +1,51 @@
-from sentence_transformers import SentenceTransformer, util
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 
 class TextGenerator:
     """
-    Handles:
-    - Chat-style responses
-    - Semantic similarity
-    - Text rewriting / expansion
+    Lightweight text generator + semantic similarity.
+    TF-IDF based (Streamlit Cloud compatible).
     """
 
-    def __init__(self, model_name="all-MiniLM-L6-v2"):
-        self.model = SentenceTransformer(model_name)
+    def __init__(self):
+        self.vectorizer = TfidfVectorizer()
 
-    # ============================
-    # Chat-style response generator
-    # ============================
-    def generate_response(self, user_query: str) -> str:
-        """
-        Basic conversational response.
-        (You can expand this later for bonus points.)
-        """
-        return f"I processed your request: '{user_query}'. Please provide more details so I can help you better."
+    # ======================================
+    # Chat response
+    # ======================================
+    def generate_response(self, query: str) -> str:
+        return f"I processed your request: '{query}'. Let me know what you want to analyze."
 
-    # ============================
-    # Semantic Similarity
-    # ============================
-    def compare_similarity(self, text_a: str, text_b: str) -> dict:
-        """
-        Computes similarity between two texts using cosine similarity.
-        """
-        embedding1 = self.model.encode(text_a, convert_to_tensor=True)
-        embedding2 = self.model.encode(text_b, convert_to_tensor=True)
+    # ======================================
+    # Similarity
+    # ======================================
+    def compare_similarity(self, text1: str, text2: str):
+        documents = [text1, text2]
 
-        similarity_score = util.cos_sim(embedding1, embedding2).item()
-        similarity_score = round(float(similarity_score), 4)
+        try:
+            tfidf = self.vectorizer.fit_transform(documents)
+            vec1 = tfidf[0].toarray()[0]
+            vec2 = tfidf[1].toarray()[0]
+        except:
+            return {"similarity_score": 0.0, "interpretation": "Not enough text."}
+
+        # cosine similarity
+        dot = np.dot(vec1, vec2)
+        norm = np.linalg.norm(vec1) * np.linalg.norm(vec2)
+        score = dot / norm if norm != 0 else 0
+        score = float(round(score, 4))
 
         return {
-            "similarity_score": similarity_score,
-            "interpretation": self._interpret_similarity(similarity_score)
+            "similarity_score": score,
+            "interpretation": self._interpret(score),
         }
 
-    def _interpret_similarity(self, score: float) -> str:
-        """
-        Human-readable interpretation.
-        """
-
+    def _interpret(self, score):
         if score > 0.85:
-            return "Highly similar — same topic or meaning."
-        elif score > 0.60:
-            return "Moderately similar — related but not identical."
-        elif score > 0.40:
-            return "Somewhat related — partially similar."
-        else:
-            return "Not similar — different meaning."
-
-    # ============================
-    # Basic rewriting (optional)
-    # ============================
-    def rewrite_text(self, text: str) -> str:
-        return f"Rewritten version: {text}"
-
-    # ============================
-    # Basic expansion (optional)
-    # ============================
-    def expand_text(self, text: str) -> str:
-        return f"Expanded explanation: {text}"
+            return "Highly similar"
+        if score > 0.60:
+            return "Moderately similar"
+        if score > 0.40:
+            return "Somewhat related"
+        return "Not similar"
