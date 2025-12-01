@@ -13,8 +13,8 @@ from src.analysis.topic_modeler import TopicModeler
 
 # Language model tools
 from src.language_models.summarizer import Summarizer
-from src.language_models.embeddings import EmbeddingModel   
-#from src.language_models.generator import TextGenerator
+#from src.language_models.embeddings import EmbeddingModel   
+from src.language_models.generator import TextGenerator
 
 # Multilingual modules
 from src.multilingual.translator import Translator
