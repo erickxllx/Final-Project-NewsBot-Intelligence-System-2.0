@@ -3,12 +3,13 @@ from transformers import pipeline
 
 class NewsClassifier:
     def __init__(self):
-        # Zero-shot classifier potente
+        # Modelo zero-shot MULTILINGÜE (sirve para español)
         self.classifier = pipeline(
             "zero-shot-classification",
-            model="facebook/bart-large-mnli"
+            model="joeddav/xlm-roberta-large-xnli"
         )
-        # Labels típicos de noticias
+
+        # Etiquetas típicas de noticias
         self.labels = [
             "politics",
             "economy",
@@ -23,10 +24,8 @@ class NewsClassifier:
         ]
 
     def predict(self, text: str):
-        """
-        Returns top label + scores for news topic.
-        """
-        if not text.strip():
+        text = text.strip()
+        if not text:
             return {"error": "Empty text for classification."}
 
         result = self.classifier(
@@ -34,7 +33,9 @@ class NewsClassifier:
             candidate_labels=self.labels,
             multi_label=False
         )
+
         return {
-            "predicted_topic": result["labels"][0],
-            "scores": dict(zip(result["labels"], result["scores"]))
+            "label": result["labels"][0],
+            "confidence": float(result["scores"][0]),
+            "all_scores": dict(zip(result["labels"], map(float, result["scores"])))
         }
