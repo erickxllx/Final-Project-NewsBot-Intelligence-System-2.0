@@ -1,51 +1,44 @@
-import numpy as np
-from sklearn.feature_extraction.text import TfidfVectorizer
+from sentence_transformers import SentenceTransformer, util
 
 
 class TextGenerator:
-    """
-    Lightweight text generator + semantic similarity.
-    TF-IDF based (Streamlit Cloud compatible).
-    """
-
     def __init__(self):
-        self.vectorizer = TfidfVectorizer()
+        # Modelo de embeddings potente
+        self.embedding_model = SentenceTransformer("all-MiniLM-L6-v2")
 
-    # ======================================
-    # Chat response
-    # ======================================
-    def generate_response(self, query: str) -> str:
-        return f"I processed your request: '{query}'. Let me know what you want to analyze."
+    def compare_similarity(self, text_a: str, text_b: str):
+        if not text_a.strip() or not text_b.strip():
+            return {"error": "Two non-empty texts are required."}
 
-    # ======================================
-    # Similarity
-    # ======================================
-    def compare_similarity(self, text1: str, text2: str):
-        documents = [text1, text2]
-
-        try:
-            tfidf = self.vectorizer.fit_transform(documents)
-            vec1 = tfidf[0].toarray()[0]
-            vec2 = tfidf[1].toarray()[0]
-        except:
-            return {"similarity_score": 0.0, "interpretation": "Not enough text."}
-
-        # cosine similarity
-        dot = np.dot(vec1, vec2)
-        norm = np.linalg.norm(vec1) * np.linalg.norm(vec2)
-        score = dot / norm if norm != 0 else 0
-        score = float(round(score, 4))
-
+        embeddings = self.embedding_model.encode([text_a, text_b])
+        score = float(util.cos_sim(embeddings[0], embeddings[1]))
         return {
             "similarity_score": score,
-            "interpretation": self._interpret(score),
+            "interpretation": (
+                "Very similar" if score > 0.75 else
+                "Somewhat similar" if score > 0.4 else
+                "Not very similar"
+            )
         }
 
-    def _interpret(self, score):
-        if score > 0.85:
-            return "Highly similar"
-        if score > 0.60:
-            return "Moderately similar"
-        if score > 0.40:
-            return "Somewhat related"
-        return "Not similar"
+    def generate_response(self, query: str):
+        """
+        Chat básico: no usa un LLM gigante para no matar Colab,
+        pero responde de forma decente para fines del proyecto.
+        """
+        q = query.lower()
+        if "hello" in q or "hi" in q or "hola" in q:
+            return "Hola, soy NewsBot. Puedo ayudarte a analizar noticias: resumen, sentimiento, entidades, traducción y más."
+        if "who are you" in q or "qué eres" in q:
+            return "Soy el NewsBot Intelligence System, un asistente de NLP diseñado para analizar noticias y textos informativos."
+
+        return (
+            "He recibido tu mensaje, y puedo ayudarte a: \n"
+            "- Resumir una noticia (Summarization)\n"
+            "- Analizar el sentimiento (Sentiment)\n"
+            "- Extraer entidades (NER)\n"
+            "- Traducir entre inglés y español\n"
+            "- Clasificar el tema de la noticia\n"
+            "- Medir la similitud entre dos textos\n"
+            "Usa el menú de la izquierda o envíame instrucciones más específicas. 🙂"
+        )
