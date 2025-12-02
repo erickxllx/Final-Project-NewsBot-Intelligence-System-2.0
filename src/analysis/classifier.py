@@ -1,46 +1,40 @@
+from transformers import pipeline
+
+
 class NewsClassifier:
-    """
-    Zero-shot topic classifier using keyword rules.
-    Works without training and is 100% Streamlit-safe.
-    """
-
     def __init__(self):
-        # Keyword dictionaries for each topic
-        self.topics = {
-            "Politics": ["election", "president", "government", "senate", "law"],
-            "Economy": ["market", "inflation", "stocks", "economy", "trade"],
-            "Technology": ["ai", "software", "tech", "computer", "robot"],
-            "Sports": ["match", "goal", "tournament", "team", "league"],
-            "Health": ["covid", "vaccine", "health", "disease", "medical"],
-            "Environment": ["climate", "pollution", "wildfire", "environment"]
-        }
+        # Zero-shot classifier potente
+        self.classifier = pipeline(
+            "zero-shot-classification",
+            model="facebook/bart-large-mnli"
+        )
+        # Labels típicos de noticias
+        self.labels = [
+            "politics",
+            "economy",
+            "business",
+            "technology",
+            "sports",
+            "health",
+            "entertainment",
+            "science",
+            "world",
+            "environment"
+        ]
 
-    def predict(self, text: str) -> dict:
+    def predict(self, text: str):
         """
-        Simple keyword-based classifier.
-        Returns a dict with label + confidence score.
+        Returns top label + scores for news topic.
         """
+        if not text.strip():
+            return {"error": "Empty text for classification."}
 
-        if not text or text.strip() == "":
-            return {"label": "Unknown", "confidence": 0.0}
-
-        t = text.lower()
-        scores = {}
-
-        # Count keywords per category
-        for topic, keywords in self.topics.items():
-            score = sum(t.count(k) for k in keywords)
-            scores[topic] = score
-
-        # Pick the best topic
-        best_topic = max(scores, key=scores.get)
-        best_score = scores[best_topic]
-
-        # Confidence normalized (0–1)
-        total = sum(scores.values())
-        confidence = best_score / total if total > 0 else 0.0
-
+        result = self.classifier(
+            text[:1500],
+            candidate_labels=self.labels,
+            multi_label=False
+        )
         return {
-            "label": best_topic,
-            "confidence": round(confidence, 3)
+            "predicted_topic": result["labels"][0],
+            "scores": dict(zip(result["labels"], result["scores"]))
         }
