@@ -19,7 +19,7 @@ class QueryProcessor:
         # Preprocessing
         self.pre = TextPreprocessor()
 
-        # Analysis modules
+        # Analysis modules (modelos potentes)
         self.classifier = NewsClassifier()
         self.sentiment = SentimentAnalyzer()
         self.ner = NERExtractor()
@@ -36,60 +36,73 @@ class QueryProcessor:
         if context is None:
             context = {}
 
-        query = query.lower().strip()
+        query_lower = query.lower().strip()
+        text = context.get("text", "")
 
         # ======================
         # Summarization
         # ======================
-        if "summary" in query or "summarize" in query or "resumen" in query:
-            return self.summarizer.summarize(context.get("text", ""))
+        if any(k in query_lower for k in ["summary", "summarize", "resumen", "resume"]):
+            if not text.strip():
+                return "No text provided to summarize."
+            return self.summarizer.summarize(text)
 
         # ======================
         # Sentiment
         # ======================
-        if "sentiment" in query or "feeling" in query or "opinion" in query:
-            return self.sentiment.analyze(context.get("text", ""))
+        if any(k in query_lower for k in ["sentiment", "feeling", "opinion", "analyze sentiment"]):
+            if not text.strip():
+                return "No text provided for sentiment analysis."
+            return self.sentiment.analyze(text)
 
         # ======================
         # NER
         # ======================
-        if "entities" in query or "ner" in query:
-            return self.ner.extract(context.get("text", ""))
+        if any(k in query_lower for k in ["entities", "ner", "extract entities", "named entity"]):
+            if not text.strip():
+                return "No text provided for entity extraction."
+            return self.ner.extract(text)
 
         # ======================
         # Translation
         # ======================
-        query_lower = query.lower()
-
-                # ======================
-                # Translation
-                # ======================
-        if "translate" in query_lower or "traducir" in query_lower:
-                text = context.get("text", "")
-                lang = self.translator.detect_language(text)
-
-                if lang == "es":
-                    return self.translator.translate_to_english(text)
-                else:
-                    return self.translator.translate_to_spanish(text)
-
+        if any(k in query_lower for k in ["translate", "translation", "traducir"]):
+            if not text.strip():
+                return "No text provided to translate."
+            lang = self.translator.detect_language(text)
+            if lang == "es":
+                return self.translator.translate_to_english(text)
+            else:
+                return self.translator.translate_to_spanish(text)
 
         # ======================
         # Similarity
+        # (usa embeddings potentes en TextGenerator)
         # ======================
-        if "similar" in query or "similarity" in query or "compare" in query:
-            return self.generator.compare_similarity(
-                context.get("text", ""),
-                context.get("reference", "")
-            )
+        if any(k in query_lower for k in ["similar", "similarity", "compare"]):
+            text_a = context.get("text", "")
+            text_b = context.get("reference", "")
+            if not text_a.strip() or not text_b.strip():
+                return "Two texts are required for similarity comparison."
+            return self.generator.compare_similarity(text_a, text_b)
 
         # ======================
-        # Classification
+        # Classification (topic)
         # ======================
-        if "classify" in query or "topic" in query or "category" in query:
-            return self.classifier.predict(context.get("text", ""))
+        if any(k in query_lower for k in ["classify", "topic", "category"]):
+            if not text.strip():
+                return "No text provided for topic classification."
+            return self.classifier.predict(text)
 
         # ======================
-        # Default chat
+        # Topic Modeling (más detallado)
+        # ======================
+        if "topics" in query_lower or "topic model" in query_lower:
+            if not text.strip():
+                return "No text provided for topic modeling."
+            return self.topic_modeler.get_topics(text)
+
+        # ======================
+        # Default chat (respuesta generativa básica)
         # ======================
         return self.generator.generate_response(query)
