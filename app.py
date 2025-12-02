@@ -1,7 +1,8 @@
 import streamlit as st
 import os
 import sys
-
+from src.test_marker import marker
+st.sidebar.write("🔍 SRC Marker:", marker())
 # Add project root
 if "src" not in os.listdir():
     PROJECT_ROOT = os.path.abspath("..")
@@ -97,5 +98,4 @@ elif mode == "Classification":
         result = bot.ask("Classify the topic of this article.", {"text": text})
         st.write("### Predicted Topic:")
         st.write(result)
-from src.test_marker import marker
-st.sidebar.write("🔍 SRC Marker:", marker())
+
