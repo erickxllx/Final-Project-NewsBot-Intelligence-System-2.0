@@ -1,28 +1,48 @@
 from transformers import pipeline
+from src.multilingual.translator import Translator
 
 
 class Summarizer:
     def __init__(self):
-        # Modelo fuerte para resumen de noticias
+        # Modelo fuerte para resumen (inglés)
         self.summarizer = pipeline(
             "summarization",
             model="facebook/bart-large-cnn"
         )
+        self.translator = Translator()
 
-    def summarize(self, text: str, max_length: int = 180, min_length: int = 60):
-        if not text.strip():
+    def summarize(self, text: str, max_length: int = 180, min_length: int = 60) -> str:
+        text = text.strip()
+        if not text:
             return "Empty text, nothing to summarize."
 
-        # cortar por si el texto es gigante (limite de tokens)
-        text = text.strip()
-        if len(text) > 4000:
-            text = text[:4000]
+        # Detectar idioma original
+        lang = self.translator.detect_language(text)
+        original_lang = lang
+
+        # Si el texto está en español, lo traducimos a inglés antes de resumir
+        if lang == "es":
+            text_en = self.translator.translate_to_english(text)
+        else:
+            text_en = text
+
+        # Cortar por si es muy largo (límite de tokens)
+        if len(text_en) > 4000:
+            text_en = text_en[:4000]
 
         result = self.summarizer(
-            text,
+            text_en,
             max_length=max_length,
             min_length=min_length,
             do_sample=False
         )
 
-        return result[0]["summary_text"]
+        summary_en = result[0]["summary_text"]
+
+        # Si el original era en español, regresamos el resumen en español
+        if original_lang == "es":
+            summary = self.translator.translate_to_spanish(summary_en)
+        else:
+            summary = summary_en
+
+        return summary
