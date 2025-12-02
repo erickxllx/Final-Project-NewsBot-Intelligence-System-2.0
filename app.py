@@ -51,7 +51,7 @@ if mode == "Chat":
             st.write(response)
 
 elif mode == "Summarization":
-    st.header("📝 Summarize News Article")
+    st.header("📝 Summarize News Article Hola mundo")
     text = st.text_area("Paste article text here:")
     if st.button("Summarize"):
         result = bot.ask("Summarize this news:", {"text": text})
